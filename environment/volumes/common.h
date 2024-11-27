@@ -128,18 +128,36 @@ void send_raw_ip_packet(ipheader *ip)
     // Create a raw socket and sets options associated with a socket
     // TODO
     // create a socket
+    int sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    
     // set socket options using sockopt
-
+   setsockopt(sock, IPPROTO_IP, IP_HDRINCL, &enable, sizeof(enable));
+  
     // Set packet destination info
     // TODO
     // set destination info -> family and sin_addr provided by the ip header
+    memset(&dest_info, 0, sizeof(dest_info));
+    dest_info.sin_family = AF_INET;
+    dest_info.sin_addr = ip->iph_destip; // Destination IP from IP header
+    //dest_info.sin_port = htons(udp->udp_dport); // Destination port (optional, not used for raw IP)
 
     // Send the packet
     printf("Sending packet...\n");
     // This will be used by both the server and spoofer
     // error checking for sendto
     // if good, send the packet to the socket
+    sendto(sock, ip, ntohs(ip->iph_len), 0, (struct sockaddr *)&dest_info, sizeof(dest_info));
+  
+    /*
+    struct in_addr src_ip, dest_ip;
+    src_ip.s_addr = ip->iph_sourceip.s_addr;
+    dest_ip.s_addr = ip->iph_destip.s_addr;
     
+    std::cout << inet_ntoa(src_ip) << " --> " << inet_ntoa(dest_ip) << std::endl;
+    */
+
+    printf("Packet sent successfully\n");
     // Closet socket
     // TODO
+    close(sock);
 }
